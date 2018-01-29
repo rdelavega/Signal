@@ -1,0 +1,14 @@
+{
+  "name": "signal",
+  "version": "1.0.0",
+  "description": "Semaforo automatico",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Ricardo de la Vega",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^4.9.0"
+  }
+}
