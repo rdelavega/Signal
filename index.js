@@ -30,8 +30,21 @@ transferdb.on("child_changed", function(snapshot) {
 
           if (snapshot.val().signal == "" ||
             snapshot.val().signal == null) {
+            var inc = snapshot.val().key_empresa;
 
-            getSignal(snapshot, child);
+            if (inc == "-Kza_9vAnpw9Zv7j4n8e" ||
+              inc == "-Kza_uwyA9ad_7wlJwVN" ||
+              inc == "-KzaaeaYdyUy0ZWK9WUY" ||
+              inc == "-KzabVVwALEM8dZX00t4" ||
+              inc == "-KzacOlWAQkAVricUG-d") {
+
+              getSignal(snapshot, child, 1);
+
+            } else {
+
+              getSignal(snapshot, child, 0);
+
+            }
 
           }
 
@@ -51,13 +64,20 @@ transferdb.on("child_changed", function(snapshot) {
 
 module.exports = firebase;
 
-function getSignal(transfer, position) {
+function getSignal(transfer, position, type) {
   var questionary = position.val().cuestionario;
   var resultSet = transfer.val().resultado.split("|");
   var result = 0,
     j = 0,
     presentRisk = 0,
-    pastRisk = 0;
+    pastRisk = 0,
+    min = 0;
+
+  if (type == 0) {
+    min = 20;
+  } else if (type == 1) {
+    min = 30;
+  }
 
   for (var i = 0; i < questionary.length; i++) {
 
@@ -74,14 +94,14 @@ function getSignal(transfer, position) {
 
         if (result < 40) {
           // Riesgo presente
-          if (questionary[i]['peso'] >= 30) {
+          if (questionary[i]['puntaje'] >= min) {
             presentRisk++;
           }
         } else if (result >= 40 && result < 60) {
           // Riesgo pasado
-          // if (questionary[i]['peso'] >= 30) {
-          pastRisk++;
-          // }
+          if (questionary[i]['puntaje'] >= min) {
+            pastRisk++;
+          }
         }
 
       }
@@ -94,36 +114,48 @@ function getSignal(transfer, position) {
 
   if (resultSet.length >= j) {
 
-    compareRisk(pastRisk, presentRisk, transfer.key);
+    compareRisk(pastRisk, presentRisk, transfer.key, type);
 
   }
 
 }
 
-function compareRisk(pastRisk, presentRisk, key) {
-
+function compareRisk(pastRisk, presentRisk, key, type) {
   var status = "";
 
   if (pastRisk <= 2) {
     status = "Excelente";
   }
 
-  if (pastRisk > 2 && pastRisk < 7) {
+  if (pastRisk > 2 && pastRisk <= 4) {
     status = "Bien";
   }
 
-  if (pastRisk >= 7) {
+  if (pastRisk >= 5) {
     status = "Regular";
   }
 
-  if (presentRisk >= 5 && presentRisk <= 7) {
-    status = "Carente";
-  }
+  if (type == 0) {
 
-  if (presentRisk > 7) {
-    status = "Riesgo";
+    if (presentRisk >= 3 && presentRisk < 6) {
+      status = "Carente";
+    }
+
+    if (presentRisk >= 6) {
+      status = "Riesgo";
+    }
+
+  } else if (type == 1) {
+
+    if (pastRisk >= 2) {
+      status = "Carente";
+    }
+
+    if (presentRisk >= 1) {
+      status = "Riesgo";
+    }
+
   }
 
   transferdb.child(key).child("signal").set(status);
-
 }
