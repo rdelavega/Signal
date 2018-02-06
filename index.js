@@ -131,7 +131,7 @@ function compareRisk(pastRisk, presentRisk, key, type) {
     status = "Bien";
   }
 
-  if (pastRisk >= 5) {
+  if (pastRisk >= 5 || presentRisk <= 2) {
     status = "Regular";
   }
 
