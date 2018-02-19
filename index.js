@@ -42,7 +42,7 @@ transferdb.on("child_changed", function(snapshot) {
 
 });
 
-transferdb.orderByKey().equalTo("-L59aXtMubMc0wNeYH2w").on("child_added", function(snapshot) {
+transferdb.on("child_added", function(snapshot) {
 
   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
     .limitToLast(1).once("value").then(function(snap) {
