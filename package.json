@@ -9,6 +9,9 @@
   "author": "Ricardo de la Vega",
   "license": "ISC",
   "dependencies": {
-    "firebase": "^4.9.0"
+    "firebase": "^4.9.0",
+    "moment": "^2.20.1",
+    "momentjs": "^2.0.0",
+    "sort-by": "^1.2.0"
   }
 }
