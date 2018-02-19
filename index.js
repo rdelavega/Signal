@@ -108,7 +108,7 @@ function validateResultSet(snapshot) {
         count++;
         info['repeat'] = true;
 
-        if (count == 4) {
+        if (count == 3) {
           risk++;
         }
 
@@ -213,8 +213,7 @@ function validateSignal(child, snapshot) {
     snapshot.val().resultado.split("|").length > 0) {
 
     if (snapshot.val().signal == "" ||
-      snapshot.val().signal == null ||
-      snapshot.val().lastResultSet != null) {
+      snapshot.val().signal == null) {
 
       var inc = snapshot.val().key_empresa;
 
