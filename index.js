@@ -217,11 +217,10 @@ function validateSignal(child, snapshot) {
 
       var inc = snapshot.val().key_empresa;
 
-      if (inc == "-Kza_9vAnpw9Zv7j4n8e" ||
-        inc == "-Kza_uwyA9ad_7wlJwVN" ||
-        inc == "-KzaaeaYdyUy0ZWK9WUY" ||
-        inc == "-KzabVVwALEM8dZX00t4" ||
-        inc == "-KzacOlWAQkAVricUG-d") {
+      if (inc == "-KzeumrjANxWTCVLuKKv" ||
+        inc == "-L-bTUOVlaApDBwK0xw5" ||
+        inc == "-L-c5CTpncVyc48sXqQn" ||
+        inc == "-L-c5vvgJOp98aRPmqIu") {
 
         getSignal(snapshot, child, 1);
 
@@ -249,17 +248,11 @@ function validateSignal(child, snapshot) {
 function getSignal(transfer, position, type) {
   var questionary = position.val().cuestionario;
   var resultSet = transfer.val().resultado.split("|");
-  var result = 0,
-    j = 0,
-    presentRisk = 0,
-    pastRisk = 0,
-    min = 0;
-
-  if (type == 0) {
-    min = 20;
-  } else if (type == 1) {
-    min = 30;
-  }
+  var j = 0;
+  var risk = {
+    presentRisk: 0,
+    pastRisk: 0,
+  };
 
   for (var i = 0; i < questionary.length; i++) {
 
@@ -267,23 +260,19 @@ function getSignal(transfer, position, type) {
       questionary[i]['area'].match("Tutorial Automatico") == null &&
       questionary[i]['area'].match("Tutorial Automático") == null) {
 
-      if ((questionary[i]['area']).match("Temas") ||
-        (questionary[i]['area']).match("Temas Especiales") ||
-        (questionary[i]['area']).match("Integridad") ||
-        (questionary[i]['area']).match("Especial")) {
+      if (type == 1) {
 
-        result = 100 - resultSet[j];
+        risk = getRisk(questionary[i], resultSet[j], risk);
 
-        if (result < 40) {
-          // Riesgo presente
-          if (questionary[i]['puntaje'] >= min) {
-            presentRisk++;
-          }
-        } else if (result >= 40 && result < 60) {
-          // Riesgo pasado
-          if (questionary[i]['puntaje'] >= min) {
-            pastRisk++;
-          }
+      } else if (type == 0) {
+
+        if ((questionary[i]['area']).match("Temas") ||
+          (questionary[i]['area']).match("Temas Especiales") ||
+          (questionary[i]['area']).match("Integridad") ||
+          (questionary[i]['area']).match("Especial")) {
+
+          risk = getRisk(questionary[i], resultSet[j], risk);
+
         }
 
       }
@@ -296,9 +285,39 @@ function getSignal(transfer, position, type) {
 
   if (resultSet.length >= j) {
 
-    compareRisk(pastRisk, presentRisk, transfer.key, type);
+    compareRisk(risk, transfer.key, type);
 
   }
+
+}
+
+/*********************************************
+ * Get risk by question                      *
+ * @method getRisk                           *
+ * @param  {[obj]}  questionary survey data  *
+ * @param  {[int]}  resultSet   crude result *
+ * @param  {[obj]}  risk        risk data    *
+ * @return {[obj]}  risk                     *
+ *********************************************/
+
+function getRisk(questionary, resultSet, risk) {
+
+  var result = 100 - resultSet;
+  var min = 30;
+
+  if (result < 40) {
+    // Riesgo presente
+    if (questionary['puntaje'] >= min) {
+      risk['presentRisk']++;
+    }
+  } else if (result >= 40 && result < 60) {
+    // Riesgo pasado
+    if (questionary['puntaje'] >= min) {
+      risk['pastRisk']++;
+    }
+  }
+
+  return risk;
 
 }
 
@@ -312,41 +331,31 @@ function getSignal(transfer, position, type) {
  * @return {[string]}  signal                 *
  **********************************************/
 
-function compareRisk(pastRisk, presentRisk, key, type) {
+function compareRisk(risk, key, type) {
   var status = "";
 
-  if (pastRisk <= 2) {
+  if (risk['pastRisk'] <= 2) {
     status = "Excelente";
   }
 
-  if (pastRisk > 2 && pastRisk <= 4) {
+  if (risk['pastRisk'] > 2 && risk['pastRisk'] <= 4) {
     status = "Bien";
   }
 
-  if (pastRisk >= 5 || presentRisk == 2) {
+  if (risk['pastRisk'] > 4) {
     status = "Regular";
   }
 
-  if (type == 0) {
+  if (risk['presentRisk'] == 3) {
+    status = "Regular";
+  }
 
-    if (presentRisk >= 3 && presentRisk < 6) {
-      status = "Carente";
-    }
+  if (risk['presentRisk'] > 3 && risk['presentRisk'] <= 6) {
+    status = "Carente";
+  }
 
-    if (presentRisk >= 6) {
-      status = "Riesgo";
-    }
-
-  } else if (type == 1) {
-
-    if (pastRisk >= 2) {
-      status = "Carente";
-    }
-
-    if (presentRisk >= 1) {
-      status = "Riesgo";
-    }
-
+  if (risk['presentRisk'] > 6) {
+    status = "Riesgo";
   }
 
   transferdb.child(key).child("signal").set(status);
