@@ -26,32 +26,15 @@ transferdb.on("child_changed", function(snapshot) {
 
       snap.forEach(function(child) {
 
-        validateResultSet(snapshot);
+        if (snapshot.val().lastResultSet == null) {
 
-        validateSignal(child, snapshot);
+          validateResultSet(snapshot);
 
-        return true;
+        } else if (snapshot.val().signal == null) {
 
-      });
+          validateSignal(child, snapshot);
 
-    }).catch(function(err) {
-
-      console.log(err);
-
-    });
-
-});
-
-transferdb.on("child_added", function(snapshot) {
-
-  positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
-    .limitToLast(1).once("value").then(function(snap) {
-
-      snap.forEach(function(child) {
-
-        validateResultSet(snapshot);
-
-        validateSignal(child, snapshot);
+        }
 
         return true;
 
@@ -64,6 +47,34 @@ transferdb.on("child_added", function(snapshot) {
     });
 
 });
+
+
+////////////////////////
+// in case of restart //
+////////////////////////
+
+// transferdb.on("child_added", function(snapshot) {
+//
+//   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
+//     .limitToLast(1).once("value").then(function(snap) {
+//
+//       snap.forEach(function(child) {
+//
+//         validateResultSet(snapshot);
+//
+//         validateSignal(child, snapshot);
+//
+//         return true;
+//
+//       });
+//
+//     }).catch(function(err) {
+//
+//       console.log(err);
+//
+//     });
+//
+// });
 
 /*******************************************************
  * Validate if reprocessing is needed                  *
