@@ -203,9 +203,11 @@ function setResultSet(snapshot, collect) {
     newRS: temp
   });
 
-  transferdb.child(snapshot.key).child("lastResultSet").set(snapshot.val().resultado);
-  transferdb.child(snapshot.key).child("resultado").set(temp);
-  transferdb.child(snapshot.key).child("signal").set(null);
+  transferdb.child(snapshot.key).update({
+    lastResultSet: snapshot.val().resultado,
+    resultado: temp,
+    signal: null
+  });
 
 }
 
