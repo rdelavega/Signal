@@ -26,13 +26,13 @@ transferdb.on("child_changed", function(snapshot) {
 
       snap.forEach(function(child) {
 
-        if (snapshot.val().lastResultSet == null) {
-
-          validateResultSet(snapshot);
-
-        } else if (snapshot.val().signal == null) {
+        if (snapshot.val().signal == null) {
 
           validateSignal(child, snapshot);
+
+        } else if (snapshot.val().lastResultSet == null) {
+
+          validateResultSet(snapshot);
 
         }
 
