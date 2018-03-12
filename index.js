@@ -324,7 +324,7 @@ function getRisk(questionary, resultSet, risk) {
     if (questionary['puntaje'] >= min) {
       risk['presentRisk']++;
     }
-  } else if (result >= 40) {
+  } else if (result >= 40 && result < 60) {
     // Riesgo pasado
     // Regular en adelante
     if (questionary['puntaje'] >= min) {
