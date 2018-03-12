@@ -119,7 +119,7 @@ function validateResultSet(snapshot) {
         count++;
         info['repeat'] = true;
 
-        if (count == 3) {
+        if (count == 2) {
           risk++;
         }
 
@@ -320,11 +320,13 @@ function getRisk(questionary, resultSet, risk) {
 
   if (result < 40) {
     // Riesgo presente
+    // Riesgo y Carente
     if (questionary['puntaje'] >= min) {
       risk['presentRisk']++;
     }
-  } else if (result >= 40 && result < 60) {
+  } else if (result >= 40) {
     // Riesgo pasado
+    // Regular en adelante
     if (questionary['puntaje'] >= min) {
       risk['pastRisk']++;
     }
