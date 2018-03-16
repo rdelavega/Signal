@@ -60,9 +60,15 @@ transferdb.on("child_changed", function(snapshot) {
 //
 //       snap.forEach(function(child) {
 //
-//         validateResultSet(snapshot);
+//         if (snapshot.val().signal == null) {
+//           console.log(snapshot.key);
+//           validateSignal(child, snapshot);
 //
-//         validateSignal(child, snapshot);
+//         } else if (snapshot.val().lastResultSet == null) {
+//
+//           validateResultSet(snapshot);
+//
+//         }
 //
 //         return true;
 //
@@ -239,7 +245,7 @@ function validateSignal(child, snapshot) {
 
       } else {
 
-        getSignal(snapshot, child, 0);
+        getSignal(snapshot, child, 1);
 
       }
 
@@ -324,7 +330,9 @@ function getRisk(questionary, resultSet, risk) {
     if (questionary['puntaje'] >= min) {
       risk['presentRisk']++;
     }
-  } else if (result >= 40 && result < 60) {
+  }
+
+  if (result < 60) {
     // Riesgo pasado
     // Regular en adelante
     if (questionary['puntaje'] >= min) {
