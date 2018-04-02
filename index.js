@@ -19,17 +19,17 @@ var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
 
-transferdb.once('value').then(function(snap) {
-  snap.forEach(function(child) {
-    if (child == null) {
-      return true;
-    } else {
-      if (child.val().signal == null) {
-        transferdb.child(child.key).child('visto').set(false);
-      }
-    }
-  });
-});
+// transferdb.once('value').then(function(snap) {
+//   snap.forEach(function(child) {
+//     if (child == null) {
+//       return true;
+//     } else {
+//       if (child.val().signal == null) {
+//         transferdb.child(child.key).child('visto').set(false);
+//       }
+//     }
+//   });
+// });
 
 transferdb.on("child_changed", function(snapshot) {
 
