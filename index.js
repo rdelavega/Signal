@@ -19,6 +19,18 @@ var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
 
+transferdb.once('value').then(function(snap) {
+  snap.forEach(function(child) {
+    if (child == null) {
+      return true;
+    } else {
+      if (child.val().signal == null) {
+        transferdb.child(child.key).child('visto').set(false);
+      }
+    }
+  });
+});
+
 transferdb.on("child_changed", function(snapshot) {
 
   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
@@ -185,7 +197,7 @@ function setResultSet(snapshot, collect) {
       } else {
 
         meth = "m1";
-        collect[i]['result'] = Math.floor((Math.random() * 65) + 5).toString();
+        collect[i]['result'] = Math.floor((Math.random() * 40) + 5).toString();
 
       }
 
