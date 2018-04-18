@@ -19,18 +19,6 @@ var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
 
-// transferdb.once('value').then(function(snap) {
-//   snap.forEach(function(child) {
-//     if (child == null) {
-//       return true;
-//     } else {
-//       if (child.val().signal == null) {
-//         transferdb.child(child.key).child('visto').set(false);
-//       }
-//     }
-//   });
-// });
-
 transferdb.on("child_changed", function(snapshot) {
 
   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
@@ -248,16 +236,17 @@ function validateSignal(child, snapshot) {
 
       var inc = snapshot.val().key_empresa;
 
-      if (inc == "-KzeumrjANxWTCVLuKKv" ||
-        inc == "-L-bTUOVlaApDBwK0xw5" ||
-        inc == "-L-c5CTpncVyc48sXqQn" ||
-        inc == "-L-c5vvgJOp98aRPmqIu") {
+      if (inc == "-Kza_9vAnpw9Zv7j4n8e" ||
+        inc == "-Kza_uwyA9ad_7wlJwVN" ||
+        inc == "-KzaaeaYdyUy0ZWK9WUY" ||
+        inc == "-KzabVVwALEM8dZX00t4" ||
+        inc == "-KzacOlWAQkAVricUG-d") {
 
         getSignal(snapshot, child, 1);
 
       } else {
 
-        getSignal(snapshot, child, 1);
+        getSignal(snapshot, child, 0);
 
       }
 
@@ -281,9 +270,15 @@ function getSignal(transfer, position, type) {
   var resultSet = transfer.val().resultado.split("|");
   var j = 0;
   var risk = {
-    presentRisk: 0,
-    pastRisk: 0,
-  };
+      risk: 0,
+      presentRisk: 0,
+      pastRisk: 0,
+    },
+    cmx1 = {
+      risk: 0,
+      presentRisk: 0,
+      pastRisk: 0,
+    };
 
   for (var i = 0; i < questionary.length; i++) {
 
@@ -291,20 +286,16 @@ function getSignal(transfer, position, type) {
       questionary[i]['area'].match("Tutorial Automatico") == null &&
       questionary[i]['area'].match("Tutorial Automático") == null) {
 
-      if (type == 1) {
+      if (true) {
 
         risk = getRisk(questionary[i], resultSet[j], risk);
 
-      } else if (type == 0) {
+      }
 
-        if ((questionary[i]['area']).match("Temas") ||
-          (questionary[i]['area']).match("Temas Especiales") ||
-          (questionary[i]['area']).match("Integridad") ||
-          (questionary[i]['area']).match("Especial")) {
+      if ((questionary[i]['topic']).match("Sustracción de Bienes y Valores") ||
+        (questionary[i]['topic']).match("Consumo en Trayectos")) {
 
-          risk = getRisk(questionary[i], resultSet[j], risk);
-
-        }
+        cmx1 = getRisk(questionary[i], resultSet[j], cmx1);
 
       }
 
@@ -314,9 +305,13 @@ function getSignal(transfer, position, type) {
 
   }
 
+  if (type == 0) {
+    cmx1 = null;
+  }
+
   if (resultSet.length >= j) {
 
-    compareRisk(risk, transfer.key, type);
+    compareRisk(risk, transfer.key, type, cmx1);
 
   }
 
@@ -352,6 +347,14 @@ function getRisk(questionary, resultSet, risk) {
     }
   }
 
+  if (result >= 40 && result < 60) {
+    // Riesgo pasado
+    // Regular en adelante
+    if (questionary['puntaje'] >= min) {
+      risk['risk']++;
+    }
+  }
+
   return risk;
 
 }
@@ -366,7 +369,7 @@ function getRisk(questionary, resultSet, risk) {
  * @return {[string]}  signal                 *
  **********************************************/
 
-function compareRisk(risk, key, type) {
+function compareRisk(risk, key, type, cmx1) {
   var status = "";
 
   if (risk['pastRisk'] <= 2) {
@@ -391,6 +394,15 @@ function compareRisk(risk, key, type) {
 
   if (risk['presentRisk'] > 6) {
     status = "Riesgo";
+  }
+
+  if (cmx1 != null) {
+    if (cmx1['risk'] >= 2) {
+      status = "Carente";
+    }
+    if (cmx1['presentRisk'] >= 1) {
+      status = "Riesgo";
+    }
   }
 
   transferdb.child(key).child("signal").set(status);
