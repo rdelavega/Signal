@@ -177,7 +177,7 @@ function setResultSet(snapshot, collect) {
 
     if (collect[i]['repeat'] == true) {
 
-      if (min >= 5 && max <= 65 && range >= 30) {
+      if (false) {
 
         meth = "m2";
         collect[i]['result'] = Math.floor((Math.random() * range) + min).toString();
@@ -185,7 +185,7 @@ function setResultSet(snapshot, collect) {
       } else {
 
         meth = "m1";
-        collect[i]['result'] = Math.floor((Math.random() * 56) + 5).toString();
+        collect[i]['result'] = Math.floor((Math.random() * 63) + 5).toString();
 
       }
 
