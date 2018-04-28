@@ -124,6 +124,7 @@ function validateResultSet(snapshot) {
 
         count++;
         info['repeat'] = true;
+        collect[(i - 1)]['repeat'] = true;
 
         if (count == 2) {
           risk++;
