@@ -406,7 +406,6 @@ function compareRisk(risk, key, type, cmx1) {
       status = "Riesgo";
     }
   }
-  console.log(key);
-  console.log(status);
-  transferdb.child(key).child("signal2").set(status);
+
+  transferdb.child(key).child("signal").set(status);
 }
