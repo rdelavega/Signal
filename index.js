@@ -187,7 +187,7 @@ function setResultSet(snapshot, collect) {
       } else {
 
         meth = "m1";
-        collect[i]['result'] = Math.floor((Math.random() * 63) + 5).toString();
+        collect[i]['result'] = Math.floor((Math.random() * 40) + 5).toString();
 
       }
 
@@ -288,7 +288,7 @@ function getSignal(transfer, position, type) {
       questionary[i]['area'].match("Tutorial Automatico") == null &&
       questionary[i]['area'].match("Tutorial Automático") == null) {
 
-      if (true) {
+      if (questionary[i]['area'].match("Aptitudes") == null) {
 
         risk = getRisk(questionary[i], resultSet[j], risk);
 
