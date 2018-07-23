@@ -187,7 +187,7 @@ function setResultSet(snapshot, collect) {
       } else {
 
         meth = "m1";
-        collect[i]['result'] = Math.floor((Math.random() * 40) + 5).toString();
+        collect[i]['result'] = Math.floor((Math.random() * 52) + 5).toString();
 
       }
 
