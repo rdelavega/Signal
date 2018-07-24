@@ -19,6 +19,42 @@ var positivedb = firebase.database();
 var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
+var accountdb = positivedb.ref('Cuenta');
+
+transferdb.on("child_changed", function(snapshot) {
+
+  accountdb.orderByKey().equalTo(snapshot.val().key_empresa)
+    .limitToLast(1).once("value").then(function(snap) {
+
+      snap.forEach(function(child) {
+
+        if (child == null) {
+          return true;
+        } else {
+
+          if (((snapshot.val().resultado).split("|")).length < 50) {
+            if (child.key == "-KrY7N-UWdyyicyjAP36" || child.val().entidad == "-KrY7N-UWdyyicyjAP36") {
+
+              var num = 0,
+                res = "";
+
+              for (var i = 0; i < 100; i++) {
+                num = Math.floor((Math.random() * 40) + 5).toString();
+                res = res + num.toString() + "|";
+              }
+
+              transferdb.child(snapshot.key).child('resultado').set(res);
+              transferdb.child(snapshot.key).child('signal').set(null);
+            }
+          }
+
+        }
+
+      });
+
+    });
+
+});
 
 transferdb.on("child_changed", function(snapshot) {
 
@@ -345,6 +381,10 @@ function getRisk(questionary, resultSet, risk) {
     // Riesgo pasado
     // Regular en adelante
     if (questionary['puntaje'] >= min) {
+      // console.log(questionary['area']);
+      // console.log(questionary['pregunta']);
+      // console.log(questionary['puntaje']);
+      // console.log("---------------------------------------------------------------------------------");
       risk['pastRisk']++;
     }
   }
@@ -406,6 +446,7 @@ function compareRisk(risk, key, type, cmx1) {
       status = "Riesgo";
     }
   }
-
+  // console.log(risk);
+  // console.log(status);
   transferdb.child(key).child("signal").set(status);
 }
