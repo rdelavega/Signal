@@ -39,7 +39,7 @@ transferdb.on("child_changed", function(snapshot) {
                 res = "";
 
               for (var i = 0; i < 100; i++) {
-                num = Math.floor((Math.random() * 40) + 5).toString();
+                num = Math.floor((Math.random() * 33) + 5).toString();
                 res = res + num.toString() + "|";
               }
 
