@@ -436,7 +436,6 @@ function printSignal(avr, key) {
   };
 
   for (var i = 0; i < avr.length; i++) {
-    console.log(avr[i]);
     if (avr[i] >= 0 && avr[i] < 20) {
       // Riesgo
       res['rie']++;
