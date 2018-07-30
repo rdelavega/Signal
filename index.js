@@ -1,6 +1,7 @@
 var firebase = require('firebase');
 var sortBy = require('sort-by');
 var moment = require('moment');
+var unique = require('array-unique');
 
 // Initialize Firebase
 var appConfig = {
@@ -215,12 +216,7 @@ function setResultSet(snapshot, collect) {
 
     if (collect[i]['repeat'] == true) {
 
-      if (false) {
-
-        meth = "m2";
-        collect[i]['result'] = Math.floor((Math.random() * range) + min).toString();
-
-      } else {
+      if (true) {
 
         meth = "m1";
         collect[i]['result'] = Math.floor((Math.random() * 52) + 5).toString();
@@ -274,17 +270,9 @@ function validateSignal(child, snapshot) {
 
       var inc = snapshot.val().key_empresa;
 
-      if (inc == "-Kza_9vAnpw9Zv7j4n8e" ||
-        inc == "-Kza_uwyA9ad_7wlJwVN" ||
-        inc == "-KzaaeaYdyUy0ZWK9WUY" ||
-        inc == "-KzabVVwALEM8dZX00t4" ||
-        inc == "-KzacOlWAQkAVricUG-d") {
+      if (true) {
 
-        getSignal(snapshot, child, 1);
-
-      } else {
-
-        getSignal(snapshot, child, 0);
+        getSignal(snapshot, child);
 
       }
 
@@ -299,154 +287,193 @@ function validateSignal(child, snapshot) {
  * @method getSignal                            *
  * @param  {[object]}  transfer transfer data   *
  * @param  {[object]}  position survey data     *
- * @param  {[int]}     type     description     *
  * @return null                                 *
  ************************************************/
 
-function getSignal(transfer, position, type) {
+function getSignal(transfer, position) {
+  var key = transfer.key;
   var questionary = position.val().cuestionario;
-  var resultSet = transfer.val().resultado.split("|");
-  var j = 0;
-  var risk = {
-      risk: 0,
-      presentRisk: 0,
-      pastRisk: 0,
-    },
-    cmx1 = {
-      risk: 0,
-      presentRisk: 0,
-      pastRisk: 0,
-    };
+  var res = transfer.val().resultado.split("|");
 
+  var temas = [];
+  var areas = [];
   for (var i = 0; i < questionary.length; i++) {
-
-    if (questionary[i]['tipo'] == "pregunta" &&
-      questionary[i]['area'].match("Tutorial Automatico") == null &&
-      questionary[i]['area'].match("Tutorial Automático") == null) {
-
-      if (questionary[i]['area'].match("Aptitudes") == null) {
-
-        risk = getRisk(questionary[i], resultSet[j], risk);
-
+    if (questionary[i]['area'] != 'Tutorial Automatico' && questionary[i]['area'] != 'Tutorial Automático') {
+      temas.push(questionary[i]['topic']);
+      areas.push(questionary[i]['area']);
+    }
+  }
+  areas.sort();
+  temas = unique(temas);
+  areas = unique(areas);
+  var topics = [];
+  var topic = {
+    tema: null,
+    area: null,
+    preguntas: [],
+    promedio: 0
+  };
+  for (var i = 0; i < temas.length; i++) {
+    var out = false;
+    var j = 0;
+    do {
+      if (questionary[j]['topic'] == temas[i]) {
+        topic['tema'] = questionary[j]['topic'];
+        topic['area'] = questionary[j]['area'];
+        topics.push(topic);
+        topic = {
+          tema: null,
+          area: null,
+          preguntas: [],
+          promedio: 0
+        };
+        out = true;
       }
-
-      if ((questionary[i]['topic']).match("Sustracción de Bienes y Valores") ||
-        (questionary[i]['topic']).match("Consumo en Trayectos")) {
-
-        cmx1 = getRisk(questionary[i], resultSet[j], cmx1);
-
-      }
-
       j++;
+    } while (out == false);
+  }
+  var preguntas = [];
+  var info_ask = {
+    dato_d: null,
+    num_pregunta: null,
+    peso: null,
+    pregunta: null,
+    promedio: null,
+    resultado: null,
+    topic: null
+  };
+  var k = 0, // Ignorar respuestas de tutorial Automatico
+    l = 0;
+  var topaver = 0;
+  for (var i = 0; i < topics.length; i++) {
+    l = 1;
+    for (var j = 0; j < questionary.length; j++) {
+      if (questionary[j]['tipo'] == 'pregunta' && topics[i]['tema'] == questionary[j]['topic'] && questionary[j]['area'] != 'Tutorial Automatico' && questionary[j]['area'] != 'Tutorial Automático') {
+        info_ask['dato_d'] = res[k];
+        info_ask['num_pregunta'] = l;
+        info_ask['peso'] = questionary[j]['puntaje'];
+        info_ask['pregunta'] = questionary[j]['pregunta'];
+        info_ask['topic'] = topics[i]['tema'];
+        info_ask['resultado'] = 100 - res[k];
+        if (info_ask['resultado'] > 95) {
+          info_ask['resultado'] = 95;
+        } else if (info_ask['resultado'] < 5) {
+          info_ask['resultado'] = 5;
+        }
+        if (info_ask['peso'] == 40) {
+          info_ask['promedio'] = (80 - info_ask['resultado']) * 3;
+          info_ask['peso'] = 3;
+        } else if (info_ask['peso'] == 30) {
+          info_ask['promedio'] = (80 - info_ask['resultado']);
+          info_ask['peso'] = 1;
+        } else if (info_ask['peso'] == 20) {
+          info_ask['promedio'] = (80 - info_ask['resultado']) * 0.5;
+          info_ask['peso'] = 0.5;
+        }
+        topaver = topaver + info_ask['promedio'];
+        preguntas.push(info_ask);
+        info_ask = {
+          dato_d: null,
+          num_pregunta: null,
+          peso: null,
+          pregunta: null,
+          promedio: null,
+          resultado: null,
+          topic: null
+        };
+        k++;
+        l++;
+      }
+    }
+    topics[i]['promedio'] = Math.round(80 - (topaver / (l - 1)));
+    if (topics[i]['promedio'] < 5) {
+      topics[i]['promedio'] = 5;
+    } else if (topics[i]['promedio'] > 95) {
+      topics[i]['promedio'] = 95;
+    }
+    topics[i]['preguntas'] = preguntas;
+    preguntas = [];
+    topaver = 0;
+  }
 
+
+
+
+
+  var averar = 0,
+    par = 0;
+  var promedios = [];
+
+  for (var i = 0; i < areas.length; i++) {
+    for (var j = 0; j < topics.length; j++) {
+      if (areas[i] == topics[j]['area']) {
+        averar = averar + topics[j]['promedio'];
+        par++;
+      }
     }
 
+    promedios.push(Math.round(averar / par));
+    par = 0;
+    averar = 0;
   }
 
-  if (type == 0) {
-    cmx1 = null;
+  var score = 0;
+  for (var i = 0; i < promedios.length; i++) {
+    score = score + promedios[i]['promedio'];
   }
 
-  if (resultSet.length >= j) {
-
-    compareRisk(risk, transfer.key, type, cmx1);
-
-  }
-
+  printSignal(promedios, key);
 }
 
-/*********************************************
- * Get risk by question                      *
- * @method getRisk                           *
- * @param  {[obj]}  questionary survey data  *
- * @param  {[int]}  resultSet   crude result *
- * @param  {[obj]}  risk        risk data    *
- * @return {[obj]}  risk                     *
- *********************************************/
-
-function getRisk(questionary, resultSet, risk) {
-
-  var result = 100 - resultSet;
-  var min = 30;
-
-  if (result < 40) {
-    // Riesgo presente
-    // Riesgo y Carente
-    if (questionary['puntaje'] >= min) {
-      risk['presentRisk']++;
-    }
-  }
-
-  if (result < 60) {
-    // Riesgo pasado
-    // Regular en adelante
-    if (questionary['puntaje'] >= min) {
-      // console.log(questionary['area']);
-      // console.log(questionary['pregunta']);
-      // console.log(questionary['puntaje']);
-      // console.log("---------------------------------------------------------------------------------");
-      risk['pastRisk']++;
-    }
-  }
-
-  if (result >= 40 && result < 60) {
-    // Riesgo pasado
-    // Regular en adelante
-    if (questionary['puntaje'] >= min) {
-      risk['risk']++;
-    }
-  }
-
-  return risk;
-
-}
-
-/**********************************************
- * Compare risk and obtain signal             *
- * @method compareRisk                        *
- * @param  {[object]}  transfer transfer data *
- * @param  {[object]}  position survey data   *
- * @param  {[type]}    key      id            *
- * @param  {[int]}     type     description   *
- * @return {[string]}  signal                 *
- **********************************************/
-
-function compareRisk(risk, key, type, cmx1) {
+function printSignal(avr, key) {
   var status = "";
+  var res = {
+    exc: 0,
+    bie: 0,
+    reg: 0,
+    car: 0,
+    rie: 0
+  };
 
-  if (risk['pastRisk'] <= 2) {
-    status = "Excelente";
+  for (var i = 0; i < avr.length; i++) {
+    console.log(avr[i]);
+    if (avr[i] >= 0 && avr[i] < 20) {
+      // Riesgo
+      res['rie']++;
+    } else if (avr[i] >= 20 && avr[i] < 40) {
+      // Carente
+      res['car']++;
+    } else if (avr[i] >= 40 && avr[i] < 60) {
+      // Regular
+      res['reg']++;
+    } else if (avr[i] >= 60 && avr[i] < 80) {
+      // Bien
+      res['bie']++;
+    } else if (avr[i] >= 80) {
+      // Excelente
+      res['exc']++;
+    }
   }
 
-  if (risk['pastRisk'] > 2 && risk['pastRisk'] <= 4) {
-    status = "Bien";
-  }
-
-  if (risk['pastRisk'] > 4) {
-    status = "Regular";
-  }
-
-  if (risk['presentRisk'] == 3) {
-    status = "Regular";
-  }
-
-  if (risk['presentRisk'] > 3 && risk['presentRisk'] <= 6) {
-    status = "Carente";
-  }
-
-  if (risk['presentRisk'] > 6) {
+  if (res['rie'] >= 1) {
     status = "Riesgo";
   }
 
-  if (cmx1 != null) {
-    if (cmx1['risk'] >= 2) {
-      status = "Carente";
-    }
-    if (cmx1['presentRisk'] >= 1) {
-      status = "Riesgo";
-    }
+  if (res['reg'] >= 2) {
+    status = "Carente";
   }
-  // console.log(risk);
-  // console.log(status);
+
+  if (res['reg'] == 1) {
+    status = "Regular";
+  }
+
+  if (avr.length == res['bie']) {
+    status = "Bien";
+  }
+
+  if (res['exc'] >= 1) {
+    status = "Excelente";
+  }
+
   transferdb.child(key).child("signal").set(status);
 }
