@@ -454,24 +454,24 @@ function printSignal(avr, key) {
     }
   }
 
-  if (res['rie'] >= 1) {
-    status = "Riesgo";
-  }
-
-  if (res['reg'] >= 2) {
-    status = "Carente";
-  }
-
-  if (res['reg'] == 1) {
-    status = "Regular";
+  if (res['exc'] >= 1) {
+    status = "Excelente";
   }
 
   if (avr.length == res['bie']) {
     status = "Bien";
   }
 
-  if (res['exc'] >= 1) {
-    status = "Excelente";
+  if (res['reg'] == 1) {
+    status = "Regular";
+  }
+
+  if (res['reg'] >= 2) {
+    status = "Carente";
+  }
+
+  if (res['rie'] >= 1) {
+    status = "Riesgo";
   }
 
   transferdb.child(key).child("signal").set(status);
