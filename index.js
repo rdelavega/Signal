@@ -5,12 +5,12 @@ var unique = require('array-unique');
 
 // Initialize Firebase
 var appConfig = {
-  apiKey: "AIzaSyAy0Th8gfePK390H6siuFj2PwLpujpzczs",
-  authDomain: "prototipo3-da7e9.firebaseapp.com",
-  databaseURL: "https://prototipo3-da7e9.firebaseio.com",
-  projectId: "prototipo3-da7e9",
-  storageBucket: "prototipo3-da7e9.appspot.com",
-  messagingSenderId: "277348998180"
+  apiKey: "AIzaSyALs0CPCUtF8Qz0nZLKm-lGIIRjqVaGYJU",
+  authDomain: "prototipo4-57544.firebaseapp.com",
+  databaseURL: "https://prototipo4-57544.firebaseio.com",
+  projectId: "prototipo4-57544",
+  storageBucket: "prototipo4-57544.appspot.com",
+  messagingSenderId: "889527900945"
 };
 
 var app = firebase.initializeApp(appConfig);
