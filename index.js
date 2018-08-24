@@ -1,7 +1,6 @@
 var firebase = require('firebase');
 var sortBy = require('sort-by');
 var moment = require('moment');
-var unique = require('array-unique');
 
 // Initialize Firebase
 var appConfig = {
@@ -20,42 +19,6 @@ var positivedb = firebase.database();
 var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
-var accountdb = positivedb.ref('Cuenta');
-
-transferdb.on("child_changed", function(snapshot) {
-
-  accountdb.orderByKey().equalTo(snapshot.val().key_empresa)
-    .limitToLast(1).once("value").then(function(snap) {
-
-      snap.forEach(function(child) {
-
-        if (child == null) {
-          return true;
-        } else {
-
-          if (((snapshot.val().resultado).split("|")).length < 50) {
-            if (child.key == "-KrY7N-UWdyyicyjAP36" || child.val().entidad == "-KrY7N-UWdyyicyjAP36") {
-
-              var num = 0,
-                res = "";
-
-              for (var i = 0; i < 100; i++) {
-                num = Math.floor((Math.random() * 33) + 5).toString();
-                res = res + num.toString() + "|";
-              }
-
-              transferdb.child(snapshot.key).child('resultado').set(res);
-              transferdb.child(snapshot.key).child('signal').set(null);
-            }
-          }
-
-        }
-
-      });
-
-    });
-
-});
 
 transferdb.on("child_changed", function(snapshot) {
 
@@ -216,12 +179,8 @@ function setResultSet(snapshot, collect) {
 
     if (collect[i]['repeat'] == true) {
 
-      if (true) {
-
-        meth = "m1";
-        collect[i]['result'] = Math.floor((Math.random() * 52) + 5).toString();
-
-      }
+      meth = "m1";
+      collect[i]['result'] = Math.floor((Math.random() * 43) + 5).toString();
 
     }
 
@@ -269,12 +228,7 @@ function validateSignal(child, snapshot) {
       snapshot.val().signal == null) {
 
       var inc = snapshot.val().key_empresa;
-
-      if (true) {
-
-        getSignal(snapshot, child);
-
-      }
+      getSignal(snapshot, child);
 
     }
 
@@ -287,190 +241,118 @@ function validateSignal(child, snapshot) {
  * @method getSignal                            *
  * @param  {[object]}  transfer transfer data   *
  * @param  {[object]}  position survey data     *
+ * @param  {[int]}     type     description     *
  * @return null                                 *
  ************************************************/
 
 function getSignal(transfer, position) {
-  var key = transfer.key;
   var questionary = position.val().cuestionario;
-  var res = transfer.val().resultado.split("|");
+  var resultSet = transfer.val().resultado.split("|");
+  var j = 0;
+  var risk = {
+    risk: 0,
+    presentRisk: 0,
+    pastRisk: 0,
+  };
 
-  var temas = [];
-  var areas = [];
   for (var i = 0; i < questionary.length; i++) {
-    if (questionary[i]['area'] != 'Tutorial Automatico' && questionary[i]['area'] != 'Tutorial Automático') {
-      temas.push(questionary[i]['topic']);
-      areas.push(questionary[i]['area']);
-    }
-  }
-  areas.sort();
-  temas = unique(temas);
-  areas = unique(areas);
-  var topics = [];
-  var topic = {
-    tema: null,
-    area: null,
-    preguntas: [],
-    promedio: 0
-  };
-  for (var i = 0; i < temas.length; i++) {
-    var out = false;
-    var j = 0;
-    do {
-      if (questionary[j]['topic'] == temas[i]) {
-        topic['tema'] = questionary[j]['topic'];
-        topic['area'] = questionary[j]['area'];
-        topics.push(topic);
-        topic = {
-          tema: null,
-          area: null,
-          preguntas: [],
-          promedio: 0
-        };
-        out = true;
-      }
+
+    if (questionary[i]['tipo'] == "pregunta" &&
+      questionary[i]['area'].match("Tutorial Automatico") == null &&
+      questionary[i]['area'].match("Tutorial Automático") == null) {
+
+      risk = getRisk(questionary[i], resultSet[j], risk);
+
       j++;
-    } while (out == false);
-  }
-  var preguntas = [];
-  var info_ask = {
-    dato_d: null,
-    num_pregunta: null,
-    peso: null,
-    pregunta: null,
-    promedio: null,
-    resultado: null,
-    topic: null
-  };
-  var k = 0, // Ignorar respuestas de tutorial Automatico
-    l = 0;
-  var topaver = 0;
-  for (var i = 0; i < topics.length; i++) {
-    l = 1;
-    for (var j = 0; j < questionary.length; j++) {
-      if (questionary[j]['tipo'] == 'pregunta' && topics[i]['tema'] == questionary[j]['topic'] && questionary[j]['area'] != 'Tutorial Automatico' && questionary[j]['area'] != 'Tutorial Automático') {
-        info_ask['dato_d'] = res[k];
-        info_ask['num_pregunta'] = l;
-        info_ask['peso'] = questionary[j]['puntaje'];
-        info_ask['pregunta'] = questionary[j]['pregunta'];
-        info_ask['topic'] = topics[i]['tema'];
-        info_ask['resultado'] = 100 - res[k];
-        if (info_ask['resultado'] > 95) {
-          info_ask['resultado'] = 95;
-        } else if (info_ask['resultado'] < 5) {
-          info_ask['resultado'] = 5;
-        }
-        if (info_ask['peso'] == 40) {
-          info_ask['promedio'] = (80 - info_ask['resultado']) * 3;
-          info_ask['peso'] = 3;
-        } else if (info_ask['peso'] == 30) {
-          info_ask['promedio'] = (80 - info_ask['resultado']);
-          info_ask['peso'] = 1;
-        } else if (info_ask['peso'] == 20) {
-          info_ask['promedio'] = (80 - info_ask['resultado']) * 0.5;
-          info_ask['peso'] = 0.5;
-        }
-        topaver = topaver + info_ask['promedio'];
-        preguntas.push(info_ask);
-        info_ask = {
-          dato_d: null,
-          num_pregunta: null,
-          peso: null,
-          pregunta: null,
-          promedio: null,
-          resultado: null,
-          topic: null
-        };
-        k++;
-        l++;
-      }
-    }
-    topics[i]['promedio'] = Math.round(80 - (topaver / (l - 1)));
-    if (topics[i]['promedio'] < 5) {
-      topics[i]['promedio'] = 5;
-    } else if (topics[i]['promedio'] > 95) {
-      topics[i]['promedio'] = 95;
-    }
-    topics[i]['preguntas'] = preguntas;
-    preguntas = [];
-    topaver = 0;
-  }
 
-
-
-
-
-  var averar = 0,
-    par = 0;
-  var promedios = [];
-
-  for (var i = 0; i < areas.length; i++) {
-    for (var j = 0; j < topics.length; j++) {
-      if (areas[i] == topics[j]['area']) {
-        averar = averar + topics[j]['promedio'];
-        par++;
-      }
     }
 
-    promedios.push(Math.round(averar / par));
-    par = 0;
-    averar = 0;
   }
 
-  var score = 0;
-  for (var i = 0; i < promedios.length; i++) {
-    score = score + promedios[i]['promedio'];
+  if (resultSet.length >= j) {
+
+    compareRisk(risk, transfer.key);
+
   }
 
-  printSignal(promedios, key);
 }
 
-function printSignal(avr, key) {
-  var status = "";
-  var res = {
-    exc: 0,
-    bie: 0,
-    reg: 0,
-    car: 0,
-    rie: 0
-  };
+/*********************************************
+ * Get risk by question                      *
+ * @method getRisk                           *
+ * @param  {[obj]}  questionary survey data  *
+ * @param  {[int]}  resultSet   crude result *
+ * @param  {[obj]}  risk        risk data    *
+ * @return {[obj]}  risk                     *
+ *********************************************/
 
-  for (var i = 0; i < avr.length; i++) {
-    if (avr[i] >= 0 && avr[i] < 20) {
-      // Riesgo
-      res['rie']++;
-    } else if (avr[i] >= 20 && avr[i] < 40) {
-      // Carente
-      res['car']++;
-    } else if (avr[i] >= 40 && avr[i] < 60) {
-      // Regular
-      res['reg']++;
-    } else if (avr[i] >= 60 && avr[i] < 80) {
-      // Bien
-      res['bie']++;
-    } else if (avr[i] >= 80) {
-      // Excelente
-      res['exc']++;
+function getRisk(questionary, resultSet, risk) {
+
+  var result = 100 - resultSet;
+  var min = 30;
+
+  if (result < 40) {
+    // Riesgo presente
+    // Riesgo y Carente
+    if (questionary['puntaje'] >= min) {
+      risk['presentRisk']++;
     }
   }
 
-  if (res['exc'] >= 1) {
+  if (result >= 40 && result < 60) {
+    // Riesgo pasado
+    // Regular en adelante
+    if (questionary['puntaje'] >= min) {
+      risk['pastRisk']++;
+    }
+  }
+
+  if (result >= 40 && result < 60) {
+    // Riesgo pasado
+    // Regular en adelante
+    if (questionary['puntaje'] >= min) {
+      risk['risk']++;
+    }
+  }
+
+  return risk;
+
+}
+
+/**********************************************
+ * Compare risk and obtain signal             *
+ * @method compareRisk                        *
+ * @param  {[object]}  transfer transfer data *
+ * @param  {[object]}  position survey data   *
+ * @param  {[type]}    key      id            *
+ * @param  {[int]}     type     description   *
+ * @return {[string]}  signal                 *
+ **********************************************/
+
+function compareRisk(risk, key) {
+  var status = "";
+
+  if (risk['pastRisk'] <= 2) {
     status = "Excelente";
   }
 
-  if (avr.length == res['bie']) {
+  if (risk['pastRisk'] >= 3 && risk['pastRisk'] <= 4) {
     status = "Bien";
   }
 
-  if (res['reg'] == 1) {
+  if (risk['pastRisk'] >= 5) {
     status = "Regular";
   }
 
-  if (res['reg'] >= 2) {
+  if (risk['presentRisk'] == 3) {
+    status = "Regular";
+  }
+
+  if (risk['presentRisk'] >= 4 && risk['presentRisk'] <= 6) {
     status = "Carente";
   }
 
-  if (res['rie'] >= 1) {
+  if (risk['presentRisk'] >= 7) {
     status = "Riesgo";
   }
 
