@@ -180,7 +180,7 @@ function setResultSet(snapshot, collect) {
     if (collect[i]['repeat'] == true) {
 
       meth = "m1";
-      collect[i]['result'] = Math.floor((Math.random() * 43) + 5).toString();
+      collect[i]['result'] = Math.floor((Math.random() * 58) + 5).toString();
 
     }
 
