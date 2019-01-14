@@ -259,7 +259,8 @@ function getSignal(transfer, position) {
 
     if (questionary[i]['tipo'] == "pregunta" &&
       questionary[i]['area'].match("Tutorial Automatico") == null &&
-      questionary[i]['area'].match("Tutorial Automático") == null) {
+      questionary[i]['area'].match("Tutorial Automático") == null &&
+      questionary[i]['area'].match("Aptitudes") == null) {
 
       risk = getRisk(questionary[i], resultSet[j], risk);
 
