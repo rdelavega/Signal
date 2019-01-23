@@ -260,7 +260,9 @@ function getSignal(transfer, position) {
     if (questionary[i]['tipo'] == "pregunta" &&
       questionary[i]['area'].match("Tutorial Automatico") == null &&
       questionary[i]['area'].match("Tutorial Automático") == null &&
-      questionary[i]['area'].match("Aptitudes") == null) {
+      questionary[i]['area'].match("Aptitudes") == null &&
+      questionary[i]['area'].match("Socioeconómico") == null &&
+      questionary[i]['puntaje'] > 20) {
 
       risk = getRisk(questionary[i], resultSet[j], risk);
 
@@ -301,7 +303,7 @@ function getRisk(questionary, resultSet, risk) {
   }
 
   if (result >= 40 && result < 60) {
-    // Riesgo pasado
+    // Regular Presente
     // Regular en adelante
     if (questionary['puntaje'] >= min) {
       risk['pastRisk']++;
@@ -309,7 +311,7 @@ function getRisk(questionary, resultSet, risk) {
   }
 
   if (result >= 40 && result < 60) {
-    // Riesgo pasado
+    // Regular pasado
     // Regular en adelante
     if (questionary['puntaje'] >= min) {
       risk['risk']++;
@@ -333,11 +335,11 @@ function getRisk(questionary, resultSet, risk) {
 function compareRisk(risk, key) {
   var status = "";
 
-  if (risk['pastRisk'] <= 2) {
+  if (risk['pastRisk'] <= 3) {
     status = "Excelente";
   }
 
-  if (risk['pastRisk'] >= 3 && risk['pastRisk'] <= 4) {
+  if (risk['pastRisk'] == 4) {
     status = "Bien";
   }
 
@@ -345,17 +347,21 @@ function compareRisk(risk, key) {
     status = "Regular";
   }
 
-  if (risk['presentRisk'] == 3) {
+  if (risk['presentRisk'] == 4) {
     status = "Regular";
   }
 
-  if (risk['presentRisk'] >= 4 && risk['presentRisk'] <= 6) {
-    status = "Carente";
-  }
+  if (risk['pastRisk'] >= 6)) {
+  status = "Carente";
+}
 
-  if (risk['presentRisk'] >= 7) {
-    status = "Riesgo";
-  }
+if (risk['presentRisk'] >= 5 && risk['presentRisk'] <= 6) {
+  status = "Carente";
+}
 
-  transferdb.child(key).child("signal").set(status);
+if (risk['presentRisk'] >= 7) {
+  status = "Riesgo";
+}
+
+transferdb.child(key).child("signal").set(status);
 }
