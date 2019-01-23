@@ -351,17 +351,17 @@ function compareRisk(risk, key) {
     status = "Regular";
   }
 
-  if (risk['pastRisk'] >= 6)) {
-  status = "Carente";
-}
+  if (risk['pastRisk'] >= 6) {
+    status = "Carente";
+  }
 
-if (risk['presentRisk'] >= 5 && risk['presentRisk'] <= 6) {
-  status = "Carente";
-}
+  if (risk['presentRisk'] >= 5 && risk['presentRisk'] <= 6) {
+    status = "Carente";
+  }
 
-if (risk['presentRisk'] >= 7) {
-  status = "Riesgo";
-}
+  if (risk['presentRisk'] >= 7) {
+    status = "Riesgo";
+  }
 
-transferdb.child(key).child("signal").set(status);
+  transferdb.child(key).child("signal").set(status);
 }
