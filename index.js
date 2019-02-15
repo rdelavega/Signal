@@ -259,12 +259,15 @@ function getSignal(transfer, position) {
 
     if (questionary[i]['tipo'] == "pregunta" &&
       questionary[i]['area'].match("Tutorial Automatico") == null &&
-      questionary[i]['area'].match("Tutorial Automático") == null &&
-      questionary[i]['area'].match("Aptitudes") == null &&
-      questionary[i]['area'].match("Socioeconómico") == null &&
-      questionary[i]['puntaje'] > 20) {
+      questionary[i]['area'].match("Tutorial Automático") == null) {
 
-      risk = getRisk(questionary[i], resultSet[j], risk);
+      if (questionary[i]['area'].match("Aptitudes") == null &&
+        questionary[i]['area'].match("Socioeconómico") == null &&
+        parseInt(questionary[i]['puntaje']) > 20) {
+
+        risk = getRisk(questionary[i], resultSet[j], risk);
+
+      }
 
       j++;
 
@@ -290,7 +293,6 @@ function getSignal(transfer, position) {
  *********************************************/
 
 function getRisk(questionary, resultSet, risk) {
-
   var result = 100 - resultSet;
   var min = 30;
 
