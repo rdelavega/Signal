@@ -335,31 +335,31 @@ function getRisk(questionary, resultSet, risk) {
 function compareRisk(risk, key) {
   var status = "";
 
-  if (risk['pastRisk'] <= 3) {
+  if (risk['risk'] <= 3) {
     status = "Excelente";
   }
 
-  if (risk['pastRisk'] == 4) {
+  if (risk['risk'] == 4) {
     status = "Bien";
   }
 
-  if (risk['pastRisk'] >= 5) {
+  if (risk['risk'] >= 5) {
     status = "Regular";
   }
 
-  if (risk['presentRisk'] == 4) {
+  if (risk['presentRisk'] == 3) {
     status = "Regular";
   }
 
-  if (risk['pastRisk'] >= 6) {
+  if (risk['risk'] >= 7) {
     status = "Carente";
   }
 
-  if (risk['presentRisk'] >= 5 && risk['presentRisk'] <= 6) {
+  if (risk['presentRisk'] >= 4 && risk['presentRisk'] <= 5) {
     status = "Carente";
   }
 
-  if (risk['presentRisk'] >= 7) {
+  if (risk['presentRisk'] >= 6) {
     status = "Riesgo";
   }
 
