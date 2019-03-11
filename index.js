@@ -1,6 +1,7 @@
 var firebase = require('firebase');
 var sortBy = require('sort-by');
 var moment = require('moment');
+var unique = require('array-unique');
 
 // Initialize Firebase
 var appConfig = {
@@ -12,13 +13,44 @@ var appConfig = {
   messagingSenderId: "758565469890"
 };
 
+var config = {
+  apiKey: "AIzaSyCFHQMtcAn4X7sDgVhENP0rZnf-cWVpHb8",
+  authDomain: "backpagination.firebaseapp.com",
+  databaseURL: "https://backpagination.firebaseio.com",
+  projectId: "backpagination",
+  storageBucket: "backpagination.appspot.com",
+  messagingSenderId: "1000722220592"
+};
+
 var app = firebase.initializeApp(appConfig);
-var secondapp = firebase.initializeApp(appConfig, "Secondary");
+var secondapp = firebase.initializeApp(config, "Secondary");
+
+const positivefs = firebase.firestore(secondapp);
+positivefs.settings({
+  timestampsInSnapshots: true
+});
 
 var positivedb = firebase.database();
 var root = positivedb.ref();
 var transferdb = positivedb.ref('Transfer');
 var positiondb = positivedb.ref('Encuestas');
+var accountdb = positivedb.ref('Cuenta');
+var persondb = positivedb.ref('Personas');
+
+// transferdb.orderByChild('date_final').limitToLast(500).once('value').then(function(snapshot) {
+//
+//   var i = ""
+//   snapshot.forEach(function(child) {
+//     if (child == null) {
+//       return true;
+//     } else {
+//       getObj(child, child.val().signal);
+//       console.log("key _ " + child.key);
+//       i = child.key;
+//     }
+//   });
+//   console.log("lastKey: " + i);
+// });
 
 transferdb.on("child_changed", function(snapshot) {
 
@@ -228,7 +260,8 @@ function validateSignal(child, snapshot) {
       snapshot.val().signal == null) {
 
       var inc = snapshot.val().key_empresa;
-      getSignal(snapshot, child);
+      status = getSignal(snapshot, child);
+      getObj(snapshot, status);
 
     }
 
@@ -275,11 +308,15 @@ function getSignal(transfer, position) {
 
   }
 
+  let status = "";
+
   if (resultSet.length >= j) {
 
-    compareRisk(risk, transfer.key);
+    status = compareRisk(risk, transfer.key);
 
   }
+
+  return status;
 
 }
 
@@ -366,4 +403,382 @@ function compareRisk(risk, key) {
   }
 
   transferdb.child(key).child("signal").set(status);
+  return status;
+}
+
+var info = {
+  position: {},
+  transfer: {},
+  account: {},
+  entity: {},
+  person: {}
+};
+
+function getObj(snapshot, status) {
+
+  info = {
+    position: {},
+    transfer: {},
+    account: {},
+    entity: {},
+    person: {}
+  };
+
+  info['transfer'] = snapshot.val();
+  info['transfer']['key'] = snapshot.key;
+
+  accountdb.orderByKey().equalTo(info['transfer']['key_empresa']).once('value').then(function(snap) {
+
+    getAccount(snap);
+
+  }).then(function() {
+
+    accountdb.orderByKey().equalTo(info['account']['entidad']).once('value').then(function(snap) {
+
+      getEntity(snap);
+
+    }).then(function() {
+
+      persondb.orderByKey().equalTo(info['transfer']['key_persona']).once('value').then(function(snap) {
+
+        getPerson(snap);
+
+      }).then(function() {
+
+        positiondb.orderByKey().equalTo(info['transfer']['key_encuesta']).once('value').then(function(snap) {
+
+          finalScore = getPosition(snap);
+          saveData(finalScore, status);
+
+        });
+
+      });
+
+    });
+
+  });
+
+}
+
+function saveData(finalScore, status) {
+  let transferInfo = {
+    "codec": null,
+    "date": null,
+    "date_final": null,
+    "date_process": null,
+    "key": null,
+    "cuenta": {
+      "key": null,
+      "NComercial": null
+    },
+    "entidad": {
+      "key": null,
+      "NComercial": null
+    },
+    "encuesta": {
+      "key": null,
+      "name": null,
+      "type": null
+    },
+    "persona": {
+      "key": null,
+      "ApMat": null,
+      "ApPat": null,
+      "Empresa": null,
+      "Fotografia": null,
+      "Genero": null,
+      "Nombre": null,
+      "Puesto": null,
+      "RFC": null
+    },
+    "key_usuario": null,
+    "processed": null,
+    "puid": null,
+    "resultado": null,
+    "notes": []
+  };
+
+  if (info['transfer']['codec']) {
+    transferInfo['codec'] = info['transfer']['codec'];
+  } else {
+    transferInfo['codec'] = "ra7";
+  }
+  transferInfo['date'] = getDate(info['transfer']['date']);
+  transferInfo['date_final'] = getDate(info['transfer']['date_final']);
+  transferInfo['key'] = info['transfer']['key'];
+  transferInfo['key_usuario'] = info['transfer']['key_usuario'];
+  transferInfo['resultado'] = info['transfer']['resultado'];
+  transferInfo['processed'] = info['transfer']['processed'];
+  transferInfo['puid'] = info['transfer']['puid'];
+
+  transferInfo['cuenta']['key'] = info['account']['key'];
+  transferInfo['cuenta']['NComercial'] = info['account']['NComercial'];
+
+  transferInfo['entidad']['key'] = info['entity']['key'];
+  transferInfo['entidad']['NComercial'] = info['entity']['NComercial'];
+
+  transferInfo['encuesta']['key'] = info['position']['key'];
+  transferInfo['encuesta']['name'] = info['position']['clasificacion'];
+  transferInfo['encuesta']['type'] = info['position']['type'];
+
+  transferInfo['persona']['key'] = info['person']['key'];
+  transferInfo['persona']['Nombre'] = info['person']['Nombre'];
+  transferInfo['persona']['ApMat'] = info['person']['ApMat'];
+  transferInfo['persona']['ApPat'] = info['person']['ApPat'];
+  transferInfo['persona']['Empresa'] = info['person']['Empresa'];
+  transferInfo['persona']['Fotografia'] = info['person']['Fotografia'];
+  transferInfo['persona']['Genero'] = info['person']['Genero'];
+  transferInfo['persona']['Puesto'] = info['person']['Puesto'];
+  transferInfo['persona']['RFC'] = info['person']['RFC'];
+
+  var comInfo = {};
+
+  if (info['transfer']['commentary'] != null) {
+    comInfo['time'] = getDate(info['transfer']['commentaryDate']);
+    comInfo['id_usuario'] = info['transfer']['analyst'];
+    comInfo['comentario'] = info['transfer']['commentary'];
+    comInfo['signal'] = status;
+
+    transferInfo['notes'].push(comInfo);
+    comInfo = {};
+  }
+
+  // console.log(transferInfo);
+  positivefs.collection('transfer').add(transferInfo);
+  // positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
+
+}
+
+
+function getDate(info) {
+  var date;
+
+  if ((info.toString()).match('/')) {
+    date = moment(info, 'YYYY/MM/DD - HH:mm:ss')
+    newDate = moment(date).unix();
+  } else {
+    date = moment.unix(info);
+    newDate = date.unix();
+  }
+
+  return newDate;
+}
+
+
+function getAccount(snap) {
+  snap.forEach(function(child) {
+    if (child == null) {
+      return true;
+    } else {
+      info['account'] = child.val();
+      info['account']['key'] = child.key;
+    }
+  });
+}
+
+function getEntity(snap) {
+  snap.forEach(function(child) {
+    if (child == null) {
+      return true;
+    } else {
+      info['entity'] = child.val();
+      info['entity']['key'] = child.key;
+    }
+  });
+}
+
+function getPerson(snap) {
+  snap.forEach(function(child) {
+    if (child == null) {
+      return true;
+    } else {
+      info['person'] = child.val();
+      info['person']['key'] = child.key;
+    }
+  });
+}
+
+function getPosition(snap) {
+  var finalScore = 0;
+
+  snap.forEach(function(child) {
+    if (child == null) {
+      return true;
+    } else {
+      info['position']['clasificacion'] = child.val().clasificacion;
+      info['position']['type'] = child.val().type;
+      info['position']['key'] = child.key;
+
+      let questionary = child.val().cuestionario;
+      let resultSet = (info['transfer'].resultado).split("|"),
+        j = 0,
+        area = [];
+
+      for (var i = 0; i < questionary.length; i++) {
+        if (questionary[i]['tipo'] == "pregunta" &&
+          questionary[i]['area'] != "Tutorial Automático") {
+          questionary[i]['resultSet'] = resultSet[j];
+          area.push(questionary[i]['area']);
+          j++
+        }
+      }
+
+      unique(area);
+      questionary.sort(sortBy('topic'));
+
+      let collectTopic = getCollectTopic(questionary);
+      let collectArea = getCollectArea(area, collectTopic);
+
+      for (var i = 0; i < collectArea.length; i++) {
+        finalScore += collectArea[i]['average'];
+      }
+    }
+  });
+
+  return finalScore;
+}
+
+/**
+ * Get info from topics to calculate score GCP
+ * @param   questionary FB object
+ * @return              array
+ */
+
+function getCollectTopic(questionary) {
+  let collectTopic = [],
+    lastTopic = "",
+    infoTopic = {
+      name: null,
+      area: null,
+      questions: [],
+      average: 0
+    };
+
+  let infoQuestion = {},
+    k = 0,
+    l = 0;;
+
+  for (var i = 0; i < questionary.length; i++) {
+
+    if (questionary[i]['tipo'] == "pregunta" &&
+      questionary[i]['area'] != "Tutorial Automático") {
+
+      l++;
+
+      if (questionary[i]['topic'] == lastTopic || k == 0) {
+        infoTopic['name'] = questionary[i]['topic'];
+        infoTopic['area'] = questionary[i]['area'];
+
+        infoQuestion['res'] = getResult(questionary[i]['resultSet']);
+        infoTopic['average'] += getAverage(infoQuestion['res'], questionary[i]['puntaje']);
+        infoTopic['questions'].push(infoQuestion);
+        lastTopic = questionary[i]['topic'];
+        k++;
+      }
+
+      if (questionary[i]['topic'] != lastTopic && k != 0) {
+        collectTopic.push(infoTopic);
+        infoTopic['average'] = Math.round(80 - (infoTopic['average'] / (l - 1)));
+        infoTopic = {
+          name: null,
+          area: null,
+          questions: [],
+          average: 0
+        };
+
+        lastTopic = questionary[i]['topic'];
+        infoQuestion['res'] = getResult(questionary[i]['resultSet']);
+        infoTopic['average'] += getAverage(infoQuestion['res'], questionary[i]['puntaje']);
+        infoTopic['questions'].push(infoQuestion);
+        l = 1;
+      }
+
+    }
+
+    infoQuestion = {};
+
+  }
+
+  infoTopic['average'] = Math.round(80 - (infoTopic['average'] / (l)));
+  collectTopic.push(infoTopic);
+
+  return collectTopic;
+}
+
+/**
+ * Get info from areas to calculate score GCP
+ * @param   questionary FB object
+ * @return              array
+ */
+
+function getCollectArea(area, collectTopic) {
+  let collectArea = [],
+    infoArea = {
+      name: null,
+      average: 0
+    };
+
+  for (i = 0; i < area.length; i++) {
+    infoArea['name'] = area[i];
+
+    collectArea.push(infoArea);
+    infoArea = {
+      name: null,
+      average: 0
+    };
+  }
+
+  let count = 0;
+
+  for (j = 0; j < collectArea.length; j++) {
+    for (i = 0; i < collectTopic.length; i++) {
+      if (collectArea[j]['name'] == collectTopic[i]['area']) {
+        collectArea[j]['average'] += collectTopic[i]['average'];
+        count++;
+      }
+    }
+    collectArea[j]['average'] = Math.round(collectArea[j]['average'] / count);
+    count = 0;
+  }
+
+  return collectArea;
+}
+
+/**
+ * Get result to user interface
+ * @param   res ra7 result
+ * @return      report result
+ */
+
+function getResult(res) {
+  resultSet = 100 - res;
+
+  if (resultSet > 95) {
+    resultSet = 95;
+  } else if (resultSet < 5) {
+    resultSet = 5;
+  }
+
+  return resultSet;
+}
+
+/**
+ * Get the "average" from every resul
+ * @param   resultSet result from getResult
+ * @param   score     FB puntaje
+ * @return            "average"
+ */
+
+function getAverage(resultSet, score) {
+  let res = 0;
+
+  if (score == 40) {
+    res = (80 - resultSet) * 3;
+  } else if (score == 30) {
+    res = (80 - resultSet);
+  } else if (score == 20) {
+    res = (80 - resultSet) * 0.5;
+  }
+
+  return res;
 }
