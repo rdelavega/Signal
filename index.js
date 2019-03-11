@@ -442,7 +442,6 @@ function saveData(finalScore, status) {
     "codec": null,
     "date": null,
     "date_final": null,
-    "date_process": null,
     "key": null,
     "cuenta": {
       "key": null,
@@ -521,7 +520,7 @@ function saveData(finalScore, status) {
     comInfo = {};
   }
 
-  // console.log(transferInfo);
+  console.log(info['transfer']['key']);
   // positivefs.collection('transfer').add(transferInfo);
   positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
 
