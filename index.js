@@ -37,21 +37,6 @@ var positiondb = positivedb.ref('Encuestas');
 var accountdb = positivedb.ref('Cuenta');
 var persondb = positivedb.ref('Personas');
 
-// transferdb.orderByChild('date_final').limitToLast(500).once('value').then(function(snapshot) {
-//
-//   var i = ""
-//   snapshot.forEach(function(child) {
-//     if (child == null) {
-//       return true;
-//     } else {
-//       getObj(child, child.val().signal);
-//       console.log("key _ " + child.key);
-//       i = child.key;
-//     }
-//   });
-//   console.log("lastKey: " + i);
-// });
-
 transferdb.on("child_changed", function(snapshot) {
 
   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
@@ -416,14 +401,6 @@ var info = {
 
 function getObj(snapshot, status) {
 
-  info = {
-    position: {},
-    transfer: {},
-    account: {},
-    entity: {},
-    person: {}
-  };
-
   info['transfer'] = snapshot.val();
   info['transfer']['key'] = snapshot.key;
 
@@ -534,6 +511,7 @@ function saveData(finalScore, status) {
   var comInfo = {};
 
   if (info['transfer']['commentary'] != null) {
+
     comInfo['time'] = getDate(info['transfer']['commentaryDate']);
     comInfo['id_usuario'] = info['transfer']['analyst'];
     comInfo['comentario'] = info['transfer']['commentary'];
@@ -544,8 +522,8 @@ function saveData(finalScore, status) {
   }
 
   // console.log(transferInfo);
-  positivefs.collection('transfer').add(transferInfo);
-  // positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
+  // positivefs.collection('transfer').add(transferInfo);
+  positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
 
 }
 
