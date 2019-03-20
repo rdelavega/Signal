@@ -560,7 +560,7 @@ function saveData(finalScore, status) {
     transferInfo['notes'].push(comInfo);
     comInfo = {};
   } else {
-    comInfo['time'] = moment().format('YYYY/MM/DD - HH:mm:ss');
+    comInfo['time'] = moment().unix();
     comInfo['id_usuario'] = null;
     comInfo['comentario'] = null;
     comInfo['signal'] = status;
