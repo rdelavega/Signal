@@ -518,9 +518,17 @@ function saveData(finalScore, status) {
 
     transferInfo['notes'].push(comInfo);
     comInfo = {};
+  } else {
+    comInfo['time'] = moment().format('YYYY/MM/DD - HH:mm:ss');
+    comInfo['id_usuario'] = null;
+    comInfo['comentario'] = null;
+    comInfo['signal'] = status;
+
+    transferInfo['notes'].push(comInfo);
+    comInfo = {};
   }
 
-  console.log(info['transfer']['key']);
+  console.log(transferInfo);
   // positivefs.collection('transfer').add(transferInfo);
   positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
 
@@ -531,7 +539,7 @@ function getDate(info) {
   var date;
 
   if ((info.toString()).match('/')) {
-    date = moment(info, 'YYYY/MM/DD - HH:mm:ss')
+    date = moment(info, 'YYYY/MM/DD - HH:mm:ss');
     newDate = moment(date).unix();
   } else {
     date = moment.unix(info);
