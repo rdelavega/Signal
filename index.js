@@ -570,8 +570,17 @@ function saveData(finalScore, status) {
   }
 
   console.log(transferInfo);
-  // positivefs.collection('transfer').add(transferInfo);
-  positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
+  var docRef = positivefs.collection("transfer").doc(info['transfer']['key']);
+
+  docRef.get().then(function(doc) {
+    if (doc.exists) {
+      positivefs.collection('transfer').doc(info['transfer']['key']).update(transferInfo);
+    } else {
+      positivefs.collection('transfer').doc(info['transfer']['key']).set(transferInfo);
+    }
+  }).catch(function(error) {
+    console.log("Error getting document:", error);
+  });
 
 }
 
