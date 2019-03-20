@@ -37,6 +37,47 @@ var positiondb = positivedb.ref('Encuestas');
 var accountdb = positivedb.ref('Cuenta');
 var persondb = positivedb.ref('Personas');
 
+// transferdb.once('value').then(function(snapshot) {
+//   snapshot.forEach(function(child) {
+//     if (child == null) {
+//       return true;
+//     } else {
+//       var docRef = positivefs.collection("transfer").doc(child.key);
+//
+//       docRef.get().then(function(doc) {
+//         if (doc.exists) {
+//           var inf = {
+//             notes: []
+//           };
+//           var comInfo = {};
+//
+//           comInfo['time'] = getDate(child.val().date);
+//           comInfo['id_usuario'] = null;
+//           comInfo['comentario'] = null;
+//           comInfo['signal'] = child.val().signal;
+//
+//           // transferInfo['notes'].push(comInfo);
+//           inf['notes'].push(comInfo);
+//           console.log(child.key);
+//           console.log(inf);
+//           positivefs.collection('transfer').doc(child.key).update(inf);
+//           comInfo = {};
+//           inf = {
+//             notes: []
+//           };
+//         } else {
+//           // doc.data() will be undefined in this case
+//           // console.log("No such document!");
+//         }
+//       }).catch(function(error) {
+//         console.log("Error getting document:", error);
+//       });
+//     }
+//   });
+// });
+
+
+
 transferdb.on("child_changed", function(snapshot) {
 
   positiondb.orderByKey().equalTo(snapshot.val().key_encuesta)
